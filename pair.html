@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Link with Phone Number</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #4e54c8, #8f94fb);
+      font-family: 'Arial', sans-serif;
+      color: #ffffff;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .box {
+      padding: 2rem;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    h3 {
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+    }
+
+    .input-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    input {
+      padding: 1rem;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 1rem;
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    button {
+      padding: 1rem;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #11998e, #38ef7d);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4);
+    }
+
+    #loading-spinner {
+      display: none;
+      margin-top: 1rem;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    #pair {
+      margin-top: 2rem;
+    }
+
+    .code-display {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 1rem;
+      font-family: 'Courier New', monospace;
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      text-align: center;
+      overflow-wrap: break-word;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .code-display:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .code-label {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 480px) {
+      .box {
+        padding: 1.5rem;
+      }
+
+      h3 {
+        font-size: 1.2rem;
+      }
+
+      input, button {
+        font-size: 0.9rem;
+      }
+
+      .code-display {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="box">
+      <h3>📞 Get SESSION-ID 💡 </h3>
+      <p>Enter Your Number With Country Code</p>
+      <div class="input-container">
+        <input type="tel" id="number" placeholder="+94702481115" />
+        <button id="submit">
+          <i class="fas fa-paper-plane"></i> Submit
+        </button>
+      </div>
+      <div id="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+      </div>
+      <div id="pair"></div>
+    </div>
+    <div class="footer">
+      Powered by Bhashi-MD 💡
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
+  <script>
+    let a = document.getElementById("pair");
+    let b = document.getElementById("submit");
+    let c = document.getElementById("number");
+
+    async function Copy() {
+      let obj = document.querySelector(".code-display");
+      await navigator.clipboard.writeText(obj.textContent);
+      obj.textContent = "✔️ COPIED";
+      obj.style.background = "rgba(56, 239, 125, 0.3)";
+      setTimeout(() => {
+        obj.textContent = obj.getAttribute("data-original");
+        obj.style.background = "rgba(0, 0, 0, 0.2)";
+      }, 1000);
+    }
+
+    b.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (!c.value) {
+        a.innerHTML = '<div class="code-display">❗ Enter your WhatsApp number with country code.</div>';
+      } else if (c.value.replace(/[^0-9]/g, "").length < 11) {
+        a.innerHTML = '<div class="code-display">❗ Invalid number format. Please try again.</div>';
+      } else {
+        const bc = c.value.replace(/[^0-9]/g, "");
+        let bb = "";
+        let bbc = "";
+        const cc = bc.split('');
+        cc.map(a => {
+          bbc += a;
+          if (bbc.length == 3) {
+            bb += " " + a;
+          } else if (bbc.length == 8) {
+            bb += " " + a;
+          } else {
+            bb += a;
+          }
+        });
+        c.type = "text";
+        c.value = "+" + bb;
+        c.style = "color:white;font-size:20px";
+        document.getElementById("loading-spinner").style.display = "block";
+        a.innerHTML = ''; // Clear the previous content
+        let { data } = await axios(`/code?number=${bc}`);
+        let code = data.code || "❗ Service Unavailable";
+        a.innerHTML = `
+          <div class="code-label">Your Code:</div>
+          <div class="code-display" onclick="Copy()" data-original="${code}">${code}</div>
+          <div style="font-size: 0.8rem; margin-top: 0.5rem;">Click to copy</div>
+        `;
+        document.getElementById("loading-spinner").style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
