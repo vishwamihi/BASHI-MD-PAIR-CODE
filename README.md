@@ -1,6 +1,4 @@
 # PAIR CODE - BHASHI-MD
-# 𝙼𝙰𝙳𝙴 𝙱𝚈 𝚅𝙸𝚂𝙷𝚆𝙰 𝙼𝙸𝙷𝙸𝚁𝙰𝙽𝙶𝙰
-
 
 Welcome to the **Pair Code** project for **Bhashi-MD**. This application allows users to obtain a SESSION-ID by entering their phone number with the country code. It's a simple, interactive tool with a clean, modern interface designed to be both user-friendly and functional.
 
