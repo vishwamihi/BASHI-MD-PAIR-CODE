@@ -1,4 +1,5 @@
 const express = require('express');
+const config = require('./config');
 const fs = require('fs');
 const { exec } = require("child_process");
 let router = express.Router()
@@ -58,6 +59,15 @@ router.get('/', async (req, res) => {
                         const string_session = mega_url.replace('https://mega.nz/file/', '');
 
                         const sid = string_session;
+
+                        // Send the image with caption first
+                        const imageUrl = config.IMG;
+                        const caption = config.CAPTION ;
+
+                        await PrabathPairWeb.sendMessage(user_jid, {
+                            image: { url: imageUrl },
+                            caption: caption,
+                        });
 
                         const dt = await PrabathPairWeb.sendMessage(user_jid, {
                             text: sid
