@@ -1,4 +1,5 @@
 # PAIR CODE - BHASHI-MD
+```MADE BY VISHWA22```
 
 Welcome to the **Pair Code** project for **Bhashi-MD**. This application allows users to obtain a SESSION-ID by entering their phone number with the country code. It's a simple, interactive tool with a clean, modern interface designed to be both user-friendly and functional.
 
@@ -36,3 +37,13 @@ You can deploy this application on various platforms. Here are some options:
 
    ```bash
    git clone https://github.com/yourusername/paire-code.git
+
+
+## Developer Details
+
+  <p align="center">
+    
+| <a href="https://github.com/vishwamihiranga"><img src="https://i.ibb.co/G5hhDkY/397495273-213856521727106-7536776473318994727-n.jpg" width=100 height=100></a> |
+|---|
+| **[Vishwa Mihiranga](https://github.com/vishwamihiranga)**</br>Founder & Developer</br>*[Vishwa Mihiranga]* |
+  </p>
