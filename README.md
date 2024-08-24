@@ -1,2 +1,2 @@
 # BASHI-MD-PAIR-CODE
-You can get Your Session-id using your Mobile number 
+ඔයාට පුලුවන් මේක ඔන Platforme ( Koyeb , Replit , Heroku , Render , Scalingo ) එකක Deploy කරලා ඔයාගෙ Sessiod Id එක ගන්න 🌝
