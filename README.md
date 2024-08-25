@@ -36,7 +36,7 @@ You can deploy this application on various platforms. Here are some options:
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/yourusername/paire-code.git
+   git clone https://github.com/vishwamihi/BHASHI-MD-PAIR-CODE.git
 
 
 ## Developer Details
