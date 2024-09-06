@@ -1,5 +1,6 @@
 [build]
-  command = "npm run build"  # Build command for your project
+command = "npm install && npm start"
+ # Build command for your project
   publish = "build"  # Directory to publish, usually "build" or "dist"
   # functions = "netlify/functions"  # Uncomment this line if you're using serverless functions
 
