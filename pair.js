@@ -1,10 +1,7 @@
-// රහසිගතයි 🌝🚨 
-
 const express = require('express');
 const config = require('./config');
 const fs = require('fs');
 const { exec } = require("child_process");
-let router = express.Router()
 const pino = require("pino");
 const {
     default: makeWASocket,
@@ -16,121 +13,107 @@ const {
 } = require("@whiskeysockets/baileys");
 const { upload } = require('./mega');
 
+let router = express.Router();
+
 function removeFile(FilePath) {
     if (!fs.existsSync(FilePath)) return false;
     fs.rmSync(FilePath, { recursive: true, force: true });
 }
 
-router.get('/', async (req, res) => {
-    let num = req.query.number;
-    let pairingCode = null;
-    let pairingCodeExpiration = null;
+const codes = {}; // In-memory store for pairing codes
 
-    async function PrabathPair() {
-        const { state, saveCreds } = await useMultiFileAuthState(`./session`);
-        try {
-            let PrabathPairWeb = makeWASocket({
-                auth: {
-                    creds: state.creds,
-                    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
-                },
-                printQRInTerminal: false,
-                logger: pino({ level: "fatal" }).child({ level: "fatal" }),
-                browser: Browsers.macOS("Safari"),
-            });
+async function generatePairingCode(num) {
+    const { state, saveCreds } = await useMultiFileAuthState(`./session`);
+    let PrabathPairWeb;
 
-            if (!PrabathPairWeb.authState.creds.registered) {
-                await delay(1500);
-                num = num.replace(/[^0-9]/g, '');
-                pairingCode = await PrabathPairWeb.requestPairingCode(num);
-                pairingCodeExpiration = Date.now() + 180000; // 3 minutes from now
+    try {
+        PrabathPairWeb = makeWASocket({
+            auth: {
+                creds: state.creds,
+                keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
+            },
+            printQRInTerminal: false,
+            logger: pino({ level: "fatal" }).child({ level: "fatal" }),
+            browser: Browsers.macOS("Safari"),
+        });
 
-                if (!res.headersSent) {
-                    await res.send({ 
-                        code: pairingCode, 
-                        expires: pairingCodeExpiration 
+        if (!PrabathPairWeb.authState.creds.registered) {
+            await delay(1500);
+            num = num.replace(/[^0-9]/g, '');
+            const pairingCode = await PrabathPairWeb.requestPairingCode(num);
+            const pairingCodeExpiration = Date.now() + 180000; // 3 minutes from now
+
+            // Store the pairing code and its expiration
+            codes[num] = { code: pairingCode, expires: pairingCodeExpiration };
+
+            // Respond with the new pairing code
+            return { code: pairingCode, expires: pairingCodeExpiration };
+        }
+
+        PrabathPairWeb.ev.on('creds.update', saveCreds);
+        PrabathPairWeb.ev.on("connection.update", async (s) => {
+            const { connection, lastDisconnect } = s;
+            if (connection === "open") {
+                try {
+                    await delay(10000);
+                    const sessionPrabath = fs.readFileSync('./session/creds.json');
+                    const user_jid = jidNormalizedUser(PrabathPairWeb.user.id);
+                    const mega_url = await upload(fs.createReadStream('./session/creds.json'), `${user_jid}.json`);
+                    const string_session = mega_url.replace('https://mega.nz/file/', '');
+                    const sid = string_session;
+
+                    const imageUrl = config.IMG;
+                    const caption = config.CAPTION;
+                    await PrabathPairWeb.sendMessage(user_jid, {
+                        image: { url: imageUrl },
+                        caption: caption,
                     });
-                }
+                    await PrabathPairWeb.sendMessage(user_jid, {
+                        text: sid
+                    });
 
-                // Set a timeout to clear the pairing code after 3 minutes
-                setTimeout(async () => {
-                    if (PrabathPairWeb.authState.creds.registered) {
-                        console.log("Device paired successfully before timeout");
-                        return;
-                    }
-                    console.log("Pairing code expired");
-                    pairingCode = null;
-                    pairingCodeExpiration = null;
-                    await removeFile('./session');
-                    PrabathPairWeb.end();
-                    // Send a response to notify the client about expiration
-                    if (!res.headersSent) {
-                        res.send({ expired: true });
-                    }
-                }, 180000);
-            }
-
-            PrabathPairWeb.ev.on('creds.update', saveCreds);
-            PrabathPairWeb.ev.on("connection.update", async (s) => {
-                const { connection, lastDisconnect } = s;
-                if (connection === "open") {
-                    try {
-                        await delay(10000);
-                        const sessionPrabath = fs.readFileSync('./session/creds.json');
-                        const auth_path = './session/';
-                        const user_jid = jidNormalizedUser(PrabathPairWeb.user.id);
-                        const mega_url = await upload(fs.createReadStream(auth_path + 'creds.json'), `${user_jid}.json`);
-                        const string_session = mega_url.replace('https://mega.nz/file/', '');
-                        const sid = string_session;
-                        // Send the image with caption first
-                        const imageUrl = config.IMG;
-                        const caption = config.CAPTION;
-                        await PrabathPairWeb.sendMessage(user_jid, {
-                            image: { url: imageUrl },
-                            caption: caption,
-                        });
-                        const dt = await PrabathPairWeb.sendMessage(user_jid, {
-                            text: sid
-                        });
-                        // Notify the client about successful pairing
-                        if (!res.headersSent) {
-                            res.send({ paired: true, sid: sid });
-                        }
-                    } catch (e) {
-                        console.error("Error in connection.update handler:", e);
-                        exec('pm2 restart prabath');
-                    }
-                    await delay(100);
                     await removeFile('./session');
                     process.exit(0);
-                } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode !== 401) {
-                    await delay(10000);
-                    PrabathPair();
+                } catch (e) {
+                    console.error("Error in connection.update handler:", e);
+                    exec('pm2 restart prabath');
                 }
-            });
-        } catch (err) {
-            console.error("Error in PrabathPair function:", err);
-            exec('pm2 restart prabath-md');
-            console.log("service restarted");
-            PrabathPair();
-            await removeFile('./session');
-            if (!res.headersSent) {
-                await res.send({ code: "Service Unavailable" });
+                await delay(100);
+                await removeFile('./session');
+                process.exit(0);
+            } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode !== 401) {
+                console.log("Connection closed, retrying...");
+                await delay(10000);
+                generatePairingCode(num);
             }
-        }
+        });
+    } catch (err) {
+        console.error("Error in generatePairingCode function:", err);
+        exec('pm2 restart prabath');
+        await removeFile('./session');
+        return { code: "Service Unavailable" };
     }
+}
 
-    // Check if a valid pairing code exists
-    if (pairingCode && Date.now() < pairingCodeExpiration) {
-        return res.send({ 
-            code: pairingCode, 
-            expires: pairingCodeExpiration,
+router.get('/', async (req, res) => {
+    let num = req.query.number;
+
+    // Check if the pairing code already exists for the given number
+    if (codes[num] && Date.now() < codes[num].expires) {
+        return res.send({
+            code: codes[num].code,
+            expires: codes[num].expires,
             message: "Existing pairing code is still valid."
         });
     }
 
-    // If no valid pairing code exists, generate a new one
-    return await PrabathPair();
+    // Generate a new pairing code if none exists or if the existing one has expired
+    const result = await generatePairingCode(num);
+    if (result.code) {
+        res.send(result);
+    } else {
+        res.send({ code: "Service Unavailable" });
+    }
 });
 
 process.on('uncaughtException', function (err) {
