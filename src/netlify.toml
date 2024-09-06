@@ -1,6 +1,15 @@
 [build]
-  command = "npm run build"
-  publish = "build"
+  command = "npm run build"  # Build command for your project
+  publish = "build"  # Directory to publish, usually "build" or "dist"
+  # functions = "netlify/functions"  # Uncomment this line if you're using serverless functions
 
 [context.production.environment]
-  NODE_ENV = "production"
+  NODE_ENV = "production"  # Set production environment
+
+[build.environment]
+  NODE_VERSION = "16.x"  # Specify the Node.js version to use
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
