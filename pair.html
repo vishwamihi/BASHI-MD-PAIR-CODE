@@ -142,6 +142,29 @@
       input, button { font-size: 1rem; }
       .code-display { font-size: 1.1rem; }
     }
+    .progress-container {
+      width: 100%;
+      height: 10px;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      margin-top: 1rem;
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 100%;
+      background-color: #0072ff;
+      border-radius: 5px;
+      transition: width 1s linear;
+    }
+
+    .expiration-text {
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
   </style>
 </head>
 <body>
@@ -159,6 +182,10 @@
         <i class="fas fa-spinner fa-spin"></i>
       </div>
       <div id="pair"></div>
+      <div id="progress-container" class="progress-container">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+      <div id="expiration-text" class="expiration-text"></div>
     </div>
     <div class="footer">
       Powered by Bhashi-MD 💡
@@ -171,6 +198,9 @@
     const submitButton = document.getElementById("submit");
     const numberInput = document.getElementById("number");
     const loadingSpinner = document.getElementById("loading-spinner");
+    const progressContainer = document.getElementById("progress-container");
+    const progressBar = document.getElementById("progress-bar");
+    const expirationText = document.getElementById("expiration-text");
 
     async function copyToClipboard(text) {
       try {
@@ -214,6 +244,59 @@
       pairDiv.appendChild(clickToCopy);
     }
 
+    async function startExpirationTimer(expirationTime) {
+      const totalDuration = 180000; // 3 minutes in milliseconds
+      const updateInterval = 1000; // Update every second
+      let timeLeft = expirationTime - Date.now();
+
+      progressContainer.style.display = 'block';
+      
+      const timerInterval = setInterval(async () => {
+        timeLeft -= updateInterval;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          progressContainer.style.display = 'none';
+          expirationText.textContent = 'Code expired';
+          
+          try {
+            const response = await axios.get('/check-expiration');
+            if (response.data.expired) {
+              alert('Pairing code has expired. The page will now refresh.');
+              location.reload();
+            }
+          } catch (error) {
+            console.error('Error checking expiration:', error);
+          }
+          return;
+        }
+
+        const percentLeft = (timeLeft / totalDuration) * 100;
+        progressBar.style.width = `${percentLeft}%`;
+        
+        const minutesLeft = Math.floor(timeLeft / 60000);
+        const secondsLeft = Math.floor((timeLeft % 60000) / 1000);
+        expirationText.textContent = `Expires in ${minutesLeft}:${secondsLeft.toString().padStart(2, '0')}`;
+      }, updateInterval);
+
+      // Start checking for successful pairing
+      checkPairingStatus();
+    }
+
+    async function checkPairingStatus() {
+      const checkInterval = setInterval(async () => {
+        try {
+          const response = await axios.get('/check-pairing');
+          if (response.data.paired) {
+            clearInterval(checkInterval);
+            alert(`Pairing successful! Your SESSION-ID is: ${response.data.sid}`);
+            location.reload();
+          }
+        } catch (error) {
+          console.error('Error checking pairing status:', error);
+        }
+      }, 5000); // Check every 5 seconds
+    }
+
     submitButton.addEventListener("click", async (e) => {
       e.preventDefault();
       const phoneNumber = numberInput.value.replace(/[^0-9]/g, "");
@@ -235,11 +318,19 @@
 
       loadingSpinner.style.display = "block";
       pairDiv.innerHTML = '';
+      progressContainer.style.display = 'none';
+      expirationText.textContent = '';
 
       try {
         const { data } = await axios(`/code?number=${phoneNumber}`);
-        const code = data.code || "❗ Service Unavailable";
-        createCodeDisplay(code);
+        if (data.code && data.code !== "Service Unavailable") {
+          createCodeDisplay(data.code);
+          if (data.expires) {
+            startExpirationTimer(data.expires);
+          }
+        } else {
+          createCodeDisplay('❗ Service Unavailable');
+        }
       } catch (error) {
         console.error('Error:', error);
         createCodeDisplay('❗ Service Unavailable');
