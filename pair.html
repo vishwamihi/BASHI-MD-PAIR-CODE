@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Link with Phone Number</title>
+  <title>Get SESSION-ID</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -23,12 +22,8 @@
     }
 
     @keyframes backgroundAnimation {
-      0% {
-        background-position: 0% 0%;
-      }
-      100% {
-        background-position: 100% 100%;
-      }
+      0% { background-position: 0% 0%; }
+      100% { background-position: 100% 100%; }
     }
 
     .container {
@@ -47,14 +42,8 @@
     }
 
     @keyframes boxFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     h3 {
@@ -114,14 +103,8 @@
     }
 
     @keyframes footerFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     #pair {
@@ -154,31 +137,20 @@
     }
 
     @media (max-width: 480px) {
-      .box {
-        padding: 1.5rem;
-      }
-
-      h3 {
-        font-size: 1.4rem;
-      }
-
-      input, button {
-        font-size: 1rem;
-      }
-
-      .code-display {
-        font-size: 1.1rem;
-      }
+      .box { padding: 1.5rem; }
+      h3 { font-size: 1.4rem; }
+      input, button { font-size: 1rem; }
+      .code-display { font-size: 1.1rem; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="box">
-      <h3>📞 Get SESSION-ID 💡 </h3>
+      <h3>📞 Get SESSION-ID 💡</h3>
       <p>Enter Your Number With Country Code</p>
       <div class="input-container">
-        <input type="tel" id="number" placeholder="+94702481115" />
+        <input type="tel" id="number" placeholder="+1234567890" />
         <button id="submit">
           <i class="fas fa-paper-plane"></i> Submit
         </button>
@@ -195,55 +167,84 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
   <script>
-    let a = document.getElementById("pair");
-    let b = document.getElementById("submit");
-    let c = document.getElementById("number");
+    const pairDiv = document.getElementById("pair");
+    const submitButton = document.getElementById("submit");
+    const numberInput = document.getElementById("number");
+    const loadingSpinner = document.getElementById("loading-spinner");
 
-    async function Copy() {
-      let obj = document.querySelector(".code-display");
-      await navigator.clipboard.writeText(obj.textContent);
-      obj.textContent = "✔️ COPIED";
-      obj.style.background = "rgba(56, 239, 125, 0.3)";
-      setTimeout(() => {
-        obj.textContent = obj.getAttribute("data-original");
-        obj.style.background = "rgba(0, 0, 0, 0.3)";
-      }, 1000);
+    async function copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) {
+        console.error('Failed to copy: ', err);
+        return false;
+      }
     }
 
-    b.addEventListener("click", async (e) => {
+    function updateCodeDisplay(element, text, isSuccess = false) {
+      element.textContent = text;
+      element.style.background = isSuccess ? "rgba(56, 239, 125, 0.3)" : "rgba(0, 0, 0, 0.3)";
+    }
+
+    function createCodeDisplay(code) {
+      const codeLabel = document.createElement('div');
+      codeLabel.className = 'code-label';
+      codeLabel.textContent = 'Your Code:';
+
+      const codeDisplay = document.createElement('div');
+      codeDisplay.className = 'code-display';
+      codeDisplay.textContent = code;
+      codeDisplay.setAttribute('data-original', code);
+
+      const clickToCopy = document.createElement('div');
+      clickToCopy.style.fontSize = '0.8rem';
+      clickToCopy.style.marginTop = '0.5rem';
+      clickToCopy.textContent = 'Click to copy';
+
+      codeDisplay.addEventListener('click', async () => {
+        const success = await copyToClipboard(code);
+        updateCodeDisplay(codeDisplay, success ? '✔️ COPIED' : '❌ COPY FAILED', success);
+        setTimeout(() => updateCodeDisplay(codeDisplay, code), 1000);
+      });
+
+      pairDiv.innerHTML = '';
+      pairDiv.appendChild(codeLabel);
+      pairDiv.appendChild(codeDisplay);
+      pairDiv.appendChild(clickToCopy);
+    }
+
+    submitButton.addEventListener("click", async (e) => {
       e.preventDefault();
-      if (!c.value) {
-        a.innerHTML = '<div class="code-display">❗ Enter your WhatsApp number with country code.</div>';
-      } else if (c.value.replace(/[^0-9]/g, "").length < 11) {
-        a.innerHTML = '<div class="code-display">❗ Invalid number format. Please try again.</div>';
-      } else {
-        const bc = c.value.replace(/[^0-9]/g, "");
-        let bb = "";
-        let bbc = "";
-        const cc = bc.split('');
-        cc.map(a => {
-          bbc += a;
-          if (bbc.length == 3) {
-            bb += " " + a;
-          } else if (bbc.length == 8) {
-            bb += " " + a;
-          } else {
-            bb += a;
-          }
-        });
-        c.type = "text";
-        c.value = "+" + bb;
-        c.style = "color:white;font-size:20px";
-        document.getElementById("loading-spinner").style.display = "block";
-        a.innerHTML = ''; // Clear the previous content
-        let { data } = await axios(`/code?number=${bc}`);
-        let code = data.code || "❗ Service Unavailable";
-        a.innerHTML = `
-          <div class="code-label">Your Code:</div>
-          <div class="code-display" onclick="Copy()" data-original="${code}">${code}</div>
-          <div style="font-size: 0.8rem; margin-top: 0.5rem;">Click to copy</div>
-        `;
-        document.getElementById("loading-spinner").style.display = "none";
+      const phoneNumber = numberInput.value.replace(/[^0-9]/g, "");
+      
+      if (!phoneNumber) {
+        createCodeDisplay('❗ Enter your WhatsApp number with country code.');
+        return;
+      }
+      
+      if (phoneNumber.length < 11) {
+        createCodeDisplay('❗ Invalid number format. Please try again.');
+        return;
+      }
+
+      const formattedNumber = phoneNumber.replace(/(\d{3})(\d{3})(\d{4})/, "+$1 $2 $3");
+      numberInput.value = formattedNumber;
+      numberInput.style.color = "white";
+      numberInput.style.fontSize = "20px";
+
+      loadingSpinner.style.display = "block";
+      pairDiv.innerHTML = '';
+
+      try {
+        const { data } = await axios(`/code?number=${phoneNumber}`);
+        const code = data.code || "❗ Service Unavailable";
+        createCodeDisplay(code);
+      } catch (error) {
+        console.error('Error:', error);
+        createCodeDisplay('❗ Service Unavailable');
+      } finally {
+        loadingSpinner.style.display = "none";
       }
     });
   </script>
